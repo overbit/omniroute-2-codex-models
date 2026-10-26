@@ -15,6 +15,12 @@ Published after merging to `main` by GitHub Actions:
 
 ```sh
 docker run -d --name omniroute-2-codex-models --restart unless-stopped \
+  -p 8787:8787 \
+  --env-file ~/.omniroute/.env ghcr.io/overbit/omniroute-2-codex-models:latest
+```
+Or passing the api key directly
+```sh
+docker run -d --name omniroute-2-codex-models --restart unless-stopped \
   -p 127.0.0.1:8787:8787 \
   --add-host host.docker.internal:host-gateway \
   -e OMNIROUTE_MODELS_API_KEY='your-key' \
