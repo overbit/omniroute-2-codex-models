@@ -4,3 +4,6 @@ node_modules
 *.md
 .env
 *.log
+*_test.go
+*.zip
+*.tar.gz
