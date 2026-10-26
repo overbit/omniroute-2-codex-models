@@ -6,7 +6,7 @@
 
 - **Low overhead:** static ~5.6 MB Linux binary, around 5–6 MiB idle RSS in a local test; `scratch` Docker image with no language runtime.
 - **Fast model picker:** in-memory catalog cache (30 seconds by default), bounded to one 1 MiB response; duplicate concurrent cache misses fetch once.
-- **Credential-safe:** caller Bearer tokens go directly upstream and bypass the shared cache. Explicit/fallback environment credentials preserve previous precedence.
+- **Credential-safe:** caller Bearer tokens go directly upstream and bypass the shared cache. Set `OMNIROUTE_MODELS_API_KEY` to use a shared discovery credential and enable caching for requests coming from Codex.
 - **Portable:** runs as a standalone binary or as a multi-architecture Docker image (AMD64/ARM64); supports host-host, Docker-host, and Docker-to-Docker connections.
 
 ## Quick start: Docker
@@ -17,7 +17,7 @@ Published after merging to `main` by GitHub Actions:
 docker run -d --name omniroute-2-codex-models --restart unless-stopped \
   -p 127.0.0.1:8787:8787 \
   --add-host host.docker.internal:host-gateway \
-  -e OMNIROUTE_API_KEY='your-key' \
+  -e OMNIROUTE_MODELS_API_KEY='your-key' \
   ghcr.io/overbit/omniroute-2-codex-models:latest
 ```
 
@@ -36,7 +36,7 @@ On Linux, when OmniRoute runs **on the host** but only listens on `127.0.0.1`, b
 docker run -d --name omniroute-2-codex-models --network host \
   -e HOST=127.0.0.1 \
   -e OMNIROUTE_MODELS_URL='http://127.0.0.1:20128/v1/models?prefix=alias' \
-  -e OMNIROUTE_API_KEY='your-key' \
+  -e OMNIROUTE_MODELS_API_KEY='your-key' \
   ghcr.io/overbit/omniroute-2-codex-models:latest
 ```
 
@@ -54,7 +54,7 @@ docker run -d --name omniroute-2-codex-models --restart unless-stopped \
   --network omniroute-shared \
   -p 127.0.0.1:8787:8787 \
   -e OMNIROUTE_MODELS_URL='http://omniroute:20128/v1/models?prefix=alias' \
-  -e OMNIROUTE_API_KEY='your-key' \
+  -e OMNIROUTE_MODELS_API_KEY='your-key' \
   ghcr.io/overbit/omniroute-2-codex-models:latest
 ```
 
@@ -76,7 +76,7 @@ Requires Go 1.23+ to build; no third-party Go modules.
 git clone https://github.com/overbit/omniroute-2-codex-models.git
 cd omniroute-2-codex-models
 go build -trimpath -o omniroute-2-codex-models .
-OMNIROUTE_API_KEY='your-key' ./omniroute-2-codex-models
+OMNIROUTE_MODELS_API_KEY='your-key' ./omniroute-2-codex-models
 ```
 
 By default, the local binary listens at `http://127.0.0.1:8787/models` and queries `http://127.0.0.1:20128/v1/models?prefix=alias`.
@@ -109,7 +109,7 @@ Choose a model ID returned by `http://127.0.0.1:8787/models`. `base_url` must be
 | `HOST` | `127.0.0.1` | `0.0.0.0` | Listener interface |
 | `PORT` | `8787` | `8787` | Listener port |
 
-Keys are chosen in order: dedicated models key → incoming Bearer token → fallback key → anonymous. **Bearer-token forwarded requests never use the shared cache.** The cache holds only the latest successful fixed-credential/anonymous catalog, expires after the configured TTL, and performs a new upstream fetch on expiry. It never serves stale content after a failed refresh.
+Keys are chosen in order: dedicated models key → incoming Bearer token → fallback key → anonymous. **Bearer-token forwarded requests never use the shared cache.** To get the fast cached path when Codex sends a Bearer token, configure `OMNIROUTE_MODELS_API_KEY` on the **adapter container**. This makes every catalog lookup use the same upstream discovery identity; use forwarding instead if individual users require different model catalogs. The cache holds only the latest successful fixed-credential/anonymous catalog, expires after the configured TTL, and performs a new upstream fetch on expiry. It never serves stale content after a failed refresh.
 
 **Security:** The adapter doesn't authenticate incoming clients. Keep port 8787 bound to localhost, never expose it to the public Internet, and don't put real credentials into published Compose files.
 
