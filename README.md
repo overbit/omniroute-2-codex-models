@@ -33,6 +33,58 @@ Alternatively build locally: `docker compose up -d --build`. The published packa
 
 **Linux:** If OmniRoute only listens on host `127.0.0.1`, use `docker run --network host -e HOST=127.0.0.1 -e OMNIROUTE_MODELS_URL='http://127.0.0.1:20128/v1/models?prefix=alias' -e OMNIROUTE_API_KEY ghcr.io/overbit/omniroute-2-codex-models:latest` instead of the bridged command. No `-p` is needed in host mode.
 
+## Connect to an existing OmniRoute Docker container
+
+If OmniRoute is **already running in Docker**, connect both containers to the same user-defined Docker network. No host-published OmniRoute port is required for model discovery.
+
+**1. Find OmniRoute's container name and network:**
+
+```sh
+docker ps --format 'table {{.Names}}\t{{.Networks}}'
+docker inspect omniroute --format '{{json .NetworkSettings.Networks}}'
+```
+
+Replace `omniroute` with the actual container name. Choose one of its user-defined networks (not the built-in `bridge`). If it has no user-defined network, create one and attach it:
+
+```sh
+docker network create omniroute-shared
+docker network connect omniroute-shared omniroute
+```
+
+The network attachment is safe to omit if the container is already attached to your chosen network.
+
+**2. Start the adapter on that network (Compose):**
+
+```sh
+export OMNIROUTE_DOCKER_NETWORK=omniroute-shared  # use your actual network
+export OMNIROUTE_MODELS_URL='http://omniroute:20128/v1/models?prefix=alias'
+export OMNIROUTE_API_KEY='your-key'               # omit if not needed
+
+docker compose -f compose.yaml -f compose.omniroute.yaml up -d --build
+```
+
+The Compose overlay uses an **external** network: it will not create OmniRoute or alter its container. The default hostname is `omniroute`; override `OMNIROUTE_MODELS_URL` if your container or service is named differently. DNS names and aliases must be resolvable on that network.
+
+**Alternatively, run the published image directly:**
+
+```sh
+docker run -d --name omniroute-2-codex-models --restart unless-stopped \
+  --network omniroute-shared \
+  -p 127.0.0.1:8787:8787 \
+  -e OMNIROUTE_MODELS_URL='http://omniroute:20128/v1/models?prefix=alias' \
+  -e OMNIROUTE_API_KEY='your-key' \
+  ghcr.io/overbit/omniroute-2-codex-models:latest
+```
+
+**3. Verify:**
+
+```sh
+curl -fsS http://127.0.0.1:8787/models
+docker logs omniroute-2-codex-models
+```
+
+Use OmniRoute's **internal listening port** (20128 in these examples), not an unrelated published host port. OmniRoute must listen on an interface reachable from the Docker network (typically `0.0.0.0` inside its container). If Codex itself runs on the host, keep the Codex inference `base_url` pointed at OmniRoute's **host-accessible published port**; the internal hostname `omniroute` normally resolves only inside Docker.
+
 ## Configure Codex
 
 In `~/.codex/config.toml`:
@@ -54,7 +106,7 @@ The inference `base_url` points to OmniRoute; only `model_catalog_url` points to
 
 | Variable | Node default | Docker default | Purpose |
 | --- | --- | --- | --- |
-| `OMNIROUTE_MODELS_URL` | `http://127.0.0.1:20128/v1/models?prefix=alias` | `http://host.docker.internal:20128/v1/models?prefix=alias` | Upstream model catalog |
+| `OMNIROUTE_MODELS_URL` | `http://127.0.0.1:20128/v1/models?prefix=alias` | `http://host.docker.internal:20128/v1/models?prefix=alias` (or a Docker service hostname via overlay) | Upstream model catalog |
 | `OMNIROUTE_MODELS_API_KEY` | empty | empty | Dedicated upstream key (highest priority) |
 | `OMNIROUTE_API_KEY` | empty | empty | Fallback upstream key |
 | `HOST` | `127.0.0.1` | `0.0.0.0` | Listener interface |
@@ -68,6 +120,7 @@ Credentials priority: dedicated models key, incoming Bearer token, fallback key.
 - **502:** Check upstream URL, networking and JSON response shape.
 - **Empty model picker:** Verify `curl -fsS http://127.0.0.1:8787/models` returns a non-empty `models` array and restart Codex.
 - **Container cannot reach host:** On Linux, use host networking if OmniRoute binds only to loopback.
+- **Container cannot reach OmniRoute container:** Check both containers share a user-defined network, the hostname matches the container or network alias, and OmniRoute listens on its network interface.
 
 ## Community
 
