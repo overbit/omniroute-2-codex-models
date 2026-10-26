@@ -1,0 +1,12 @@
+# Optional overlay: connect the adapter to an existing OmniRoute Docker network.
+# Usage: docker compose -f compose.yaml -f compose.omniroute.yaml up -d --build
+services:
+  codex-models:
+    environment:
+      OMNIROUTE_MODELS_URL: ${OMNIROUTE_MODELS_URL:-http://omniroute:20128/v1/models?prefix=alias}
+    networks:
+      - omniroute
+networks:
+  omniroute:
+    external: true
+    name: ${OMNIROUTE_DOCKER_NETWORK:?Set OMNIROUTE_DOCKER_NETWORK to the Docker network shared with OmniRoute}
