@@ -9,5 +9,6 @@ services:
       OMNIROUTE_MODELS_URL: ${OMNIROUTE_MODELS_URL:-http://host.docker.internal:20128/v1/models?prefix=alias}
       OMNIROUTE_API_KEY: ${OMNIROUTE_API_KEY:-}
       OMNIROUTE_MODELS_API_KEY: ${OMNIROUTE_MODELS_API_KEY:-}
+      CACHE_TTL_SECONDS: ${CACHE_TTL_SECONDS:-30}
     extra_hosts:
       - "host.docker.internal:host-gateway"
