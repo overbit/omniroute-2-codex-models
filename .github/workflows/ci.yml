@@ -16,3 +16,9 @@ jobs:
       - run: npm test
       - run: node --check proxy.js
       - run: docker build -t omniroute-2-codex-models:test .
+      - name: Validate existing-container Compose overlay
+        env:
+          OMNIROUTE_DOCKER_NETWORK: ci-omniroute-network
+        run: |
+          docker compose -f compose.yaml -f compose.omniroute.yaml config --quiet
+          docker compose -f compose.yaml -f compose.omniroute.yaml config | grep -F 'http://omniroute:20128/v1/models?prefix=alias'
