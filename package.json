@@ -1,0 +1,16 @@
+{
+  "name": "omniroute-2-codex-models",
+  "version": "0.1.0",
+  "description": "Dependency-free OmniRoute catalog adapter for Codex CLI",
+  "license": "MIT",
+  "bin": {
+    "omniroute-2-codex-models": "./proxy.js"
+  },
+  "scripts": {
+    "start": "node proxy.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
