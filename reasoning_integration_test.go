@@ -16,7 +16,10 @@ func TestConvertCatalogReasoningFromOmniRouteSample(t *testing.T) {
       {"id":"kmca/k3","capabilities":{"reasoning":true,"effort_tiers":["low","high","max"]}},
       {"id":"vag/meta/muse-image-1.0","capabilities":{"reasoning":false,"thinking":false,"effort_tiers":["minimal","low","medium","high","xhigh"]}},
       {"id":"sprint-local","capabilities":{"reasoning":true}},
-      {"id":"custom/model-high","capabilities":{"reasoning":true,"effort_tiers":[]}}
+      {"id":"custom/model-high","capabilities":{"reasoning":true,"effort_tiers":[]}},
+      {"id":"blank-tiers","capabilities":{"reasoning":true,"effort_tiers":[""," "]}},
+      {"id":"broken-capabilities","capabilities":"not-an-object"},
+      {"id":"broken-effort-tiers","capabilities":{"reasoning":true,"effort_tiers":"high"}}
     ]}`)
 	output, err := convertCatalog(input)
 	if err != nil {
@@ -44,6 +47,9 @@ func TestConvertCatalogReasoningFromOmniRouteSample(t *testing.T) {
 		"vag/meta/muse-image-1.0":   {"", []string{}},
 		"sprint-local":              {"medium", []string{"none", "medium", "high", "xhigh"}},
 		"custom/model-high":         {"high", []string{"none", "medium", "high", "xhigh"}},
+		"blank-tiers":              {"medium", []string{"none", "medium", "high", "xhigh"}},
+		"broken-capabilities":      {"", []string{}},
+		"broken-effort-tiers":       {"", []string{}},
 	}
 	if len(response.Models) != len(expected) {
 		t.Fatalf("translated models %d, want %d", len(response.Models), len(expected))
@@ -59,6 +65,9 @@ func TestConvertCatalogReasoningFromOmniRouteSample(t *testing.T) {
 			}
 		} else if model.Default == nil || *model.Default != want.defaultEffort {
 			t.Errorf("%s: wrong default: %v, want %s", model.Slug, model.Default, want.defaultEffort)
+		}
+		if model.Levels == nil {
+			t.Errorf("%s: supported_reasoning_levels is null, want array", model.Slug)
 		}
 		actual := make([]string, 0, len(model.Levels))
 		for _, option := range model.Levels {
