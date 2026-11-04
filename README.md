@@ -137,7 +137,7 @@ Codex expects `supported_reasoning_levels` as objects with `effort` and `descrip
 
 - If reasoning is enabled **and** effort tiers are present, it exposes precisely those tiers (for example `low`, `medium`, `high`, `xhigh`, `max`, `ultra`). Aliases ending in an advertised tier (such as `-low` or `-max`) default to that tier; otherwise `medium`, then `low`, then the first advertised tier is preferred.
 - If `capabilities.reasoning` is `false`, it advertises no reasoning controls—even when the upstream model lists effort tiers (some image models do).
-- If reasoning is `true` but `effort_tiers` is missing or empty, the adapter **does not guess** which efforts the backend supports. It leaves the default unset and exposes no options.
+- If `capabilities.reasoning` is `true` but `effort_tiers` is missing or empty, the adapter exposes **`none`, `medium`, `high`, `xhigh`** (in that order) and defaults to `medium`, unless the model alias ends in one of those effort names (e.g. `-high`). This is a compatibility fallback; OmniRoute may still reject an unsupported effort.
 
 This only affects Codex model metadata, not the OmniRoute model ID or inference routing. Upstream can still reject an effort or other parameter despite advertised metadata. An explicitly set `model_reasoning_effort` in Codex `config.toml` can override the catalog default; remove or adjust that setting if you see an unsupported-effort error.
 
