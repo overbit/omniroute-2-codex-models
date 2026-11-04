@@ -15,7 +15,8 @@ func TestConvertCatalogReasoningFromOmniRouteSample(t *testing.T) {
       {"id":"cx/gpt-6-astra-max","capabilities":{"reasoning":true,"effort_tiers":["low","medium","high","xhigh","max","ultra"]}},
       {"id":"kmca/k3","capabilities":{"reasoning":true,"effort_tiers":["low","high","max"]}},
       {"id":"vag/meta/muse-image-1.0","capabilities":{"reasoning":false,"thinking":false,"effort_tiers":["minimal","low","medium","high","xhigh"]}},
-      {"id":"sprint-local","capabilities":{"reasoning":true}}
+      {"id":"sprint-local","capabilities":{"reasoning":true}},
+      {"id":"custom/model-high","capabilities":{"reasoning":true,"effort_tiers":[]}}
     ]}`)
 	output, err := convertCatalog(input)
 	if err != nil {
@@ -41,7 +42,8 @@ func TestConvertCatalogReasoningFromOmniRouteSample(t *testing.T) {
 		"cx/gpt-6-astra-max":        {"max", []string{"low", "medium", "high", "xhigh", "max", "ultra"}},
 		"kmca/k3":                   {"low", []string{"low", "high", "max"}},
 		"vag/meta/muse-image-1.0":   {"", []string{}},
-		"sprint-local":              {"", []string{}},
+		"sprint-local":              {"medium", []string{"none", "medium", "high", "xhigh"}},
+		"custom/model-high":         {"high", []string{"none", "medium", "high", "xhigh"}},
 	}
 	if len(response.Models) != len(expected) {
 		t.Fatalf("translated models %d, want %d", len(response.Models), len(expected))
