@@ -35,15 +35,15 @@ type modelInfo struct {
 	} `json:"model_messages"`
 	DefaultReasoningLevel    *string                 `json:"default_reasoning_level"`
 	SupportedReasoningLevels []reasoningEffortPreset `json:"supported_reasoning_levels"`
-	ShellType                string   `json:"shell_type"`
-	Visibility               string   `json:"visibility"`
-	SupportedInAPI           bool     `json:"supported_in_api"`
-	Priority                 int      `json:"priority"`
-	AvailabilityNux          any      `json:"availability_nux"`
-	Upgrade                  any      `json:"upgrade"`
-	SupportVerbosity         bool     `json:"support_verbosity"`
-	DefaultVerbosity         any      `json:"default_verbosity"`
-	ApplyPatchToolType       any      `json:"apply_patch_tool_type"`
+	ShellType                string                  `json:"shell_type"`
+	Visibility               string                  `json:"visibility"`
+	SupportedInAPI           bool                    `json:"supported_in_api"`
+	Priority                 int                     `json:"priority"`
+	AvailabilityNux          any                     `json:"availability_nux"`
+	Upgrade                  any                     `json:"upgrade"`
+	SupportVerbosity         bool                    `json:"support_verbosity"`
+	DefaultVerbosity         any                     `json:"default_verbosity"`
+	ApplyPatchToolType       any                     `json:"apply_patch_tool_type"`
 	TruncationPolicy         struct {
 		Mode  string `json:"mode"`
 		Limit int    `json:"limit"`
@@ -54,12 +54,12 @@ type modelInfo struct {
 }
 
 type upstreamEntry struct {
-	ID            json.RawMessage `json:"id"`
-	Name          json.RawMessage `json:"name"`
-	DisplayName   json.RawMessage `json:"display_name"`
-	ContextWindow json.RawMessage `json:"context_window"`
-	ContextLength json.RawMessage `json:"context_length"`
-	Capabilities upstreamCapabilities `json:"capabilities"`
+	ID            json.RawMessage      `json:"id"`
+	Name          json.RawMessage      `json:"name"`
+	DisplayName   json.RawMessage      `json:"display_name"`
+	ContextWindow json.RawMessage      `json:"context_window"`
+	ContextLength json.RawMessage      `json:"context_length"`
+	Capabilities  upstreamCapabilities `json:"capabilities"`
 }
 
 func optionalString(raw json.RawMessage) string {
