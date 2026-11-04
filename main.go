@@ -33,8 +33,8 @@ type modelInfo struct {
 	ModelMessages    struct {
 		InstructionsTemplate string `json:"instructions_template"`
 	} `json:"model_messages"`
-	DefaultReasoningLevel    any      `json:"default_reasoning_level"`
-	SupportedReasoningLevels []string `json:"supported_reasoning_levels"`
+	DefaultReasoningLevel    *string                 `json:"default_reasoning_level"`
+	SupportedReasoningLevels []reasoningEffortPreset `json:"supported_reasoning_levels"`
 	ShellType                string   `json:"shell_type"`
 	Visibility               string   `json:"visibility"`
 	SupportedInAPI           bool     `json:"supported_in_api"`
@@ -59,6 +59,7 @@ type upstreamEntry struct {
 	DisplayName   json.RawMessage `json:"display_name"`
 	ContextWindow json.RawMessage `json:"context_window"`
 	ContextLength json.RawMessage `json:"context_length"`
+	Capabilities upstreamCapabilities `json:"capabilities"`
 }
 
 func optionalString(raw json.RawMessage) string {
@@ -112,11 +113,12 @@ func convertCatalog(raw []byte) ([]byte, error) {
 		}
 		m := modelInfo{
 			Slug: id, DisplayName: name, BaseInstructions: baseInstructions,
-			SupportedReasoningLevels: []string{}, ShellType: "shell_command",
+			SupportedReasoningLevels: []reasoningEffortPreset{}, ShellType: "shell_command",
 			Visibility: "list", SupportedInAPI: true, Priority: len(models) + 1,
 			ExperimentalSupportedTools: []string{}, InputModalities: []string{"text"},
 		}
 		m.ModelMessages.InstructionsTemplate = baseInstructions
+		m.DefaultReasoningLevel, m.SupportedReasoningLevels = modelReasoningLevels(id, entry.Capabilities)
 		m.TruncationPolicy.Mode, m.TruncationPolicy.Limit = "tokens", 10000
 		contextSize := positiveContext(entry.ContextWindow)
 		if contextSize == 0 {
