@@ -47,9 +47,9 @@ func TestConvertCatalogReasoningFromOmniRouteSample(t *testing.T) {
 		"vag/meta/muse-image-1.0":   {"", []string{}},
 		"sprint-local":              {"medium", []string{"none", "medium", "high", "xhigh"}},
 		"custom/model-high":         {"high", []string{"none", "medium", "high", "xhigh"}},
-		"blank-tiers":              {"medium", []string{"none", "medium", "high", "xhigh"}},
-		"broken-capabilities":      {"", []string{}},
-		"broken-effort-tiers":       {"", []string{}},
+		"blank-tiers":               {"medium", []string{"none", "medium", "high", "xhigh"}},
+		"broken-capabilities":       {"", []string{}},
+		"broken-effort-tiers":        {"", []string{}},
 	}
 	if len(response.Models) != len(expected) {
 		t.Fatalf("translated models %d, want %d", len(response.Models), len(expected))
