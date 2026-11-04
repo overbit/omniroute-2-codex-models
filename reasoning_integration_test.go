@@ -49,7 +49,7 @@ func TestConvertCatalogReasoningFromOmniRouteSample(t *testing.T) {
 		"custom/model-high":         {"high", []string{"none", "medium", "high", "xhigh"}},
 		"blank-tiers":               {"medium", []string{"none", "medium", "high", "xhigh"}},
 		"broken-capabilities":       {"", []string{}},
-		"broken-effort-tiers":        {"", []string{}},
+		"broken-effort-tiers":       {"", []string{}},
 	}
 	if len(response.Models) != len(expected) {
 		t.Fatalf("translated models %d, want %d", len(response.Models), len(expected))
