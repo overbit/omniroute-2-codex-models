@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -25,6 +26,9 @@ func TestModelSpecificReasoningLevels(t *testing.T) {
 		{"reasoning true no tiers high variant", "custom/model-high", upstreamCapabilities{Reasoning: true}, "high", []string{"none", "medium", "high", "xhigh"}},
 		{"reasoning true empty tiers", "opencode-zen/glm-5.3-flash-free", upstreamCapabilities{Reasoning: true, EffortTiers: []string{}}, "medium", []string{"none", "medium", "high", "xhigh"}},
 		{"minimal levels", "custom/reasoning-minimal", upstreamCapabilities{Reasoning: true, EffortTiers: []string{"minimal"}}, "minimal", []string{"minimal"}},
+		{"longest matching alias wins", "m-extra-high", upstreamCapabilities{Reasoning: true, EffortTiers: []string{"high", "extra-high"}}, "extra-high", []string{"high", "extra-high"}},
+		{"all blank tiers fall back", "blank-tiers", upstreamCapabilities{Reasoning: true, EffortTiers: []string{"", "  ", "\t"}}, "medium", []string{"none", "medium", "high", "xhigh"}},
+		{"invalid control and long tiers are rejected", "invalid-tiers", upstreamCapabilities{Reasoning: true, EffortTiers: []string{"low", "bad\nvalue", strings.Repeat("x", 65), "high"}}, "low", []string{"low", "high"}},
 		{"deduplicate invalid or whitespace levels", "model", upstreamCapabilities{Reasoning: true, EffortTiers: []string{"low", "low", "", " medium ", "high"}}, "medium", []string{"low", "medium", "high"}},
 	}
 	for _, c := range cases {
