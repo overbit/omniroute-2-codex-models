@@ -54,12 +54,12 @@ type modelInfo struct {
 }
 
 type upstreamEntry struct {
-	ID            json.RawMessage      `json:"id"`
-	Name          json.RawMessage      `json:"name"`
-	DisplayName   json.RawMessage      `json:"display_name"`
-	ContextWindow json.RawMessage      `json:"context_window"`
-	ContextLength json.RawMessage      `json:"context_length"`
-	Capabilities  upstreamCapabilities `json:"capabilities"`
+	ID            json.RawMessage `json:"id"`
+	Name          json.RawMessage `json:"name"`
+	DisplayName   json.RawMessage `json:"display_name"`
+	ContextWindow json.RawMessage `json:"context_window"`
+	ContextLength json.RawMessage `json:"context_length"`
+	Capabilities  json.RawMessage `json:"capabilities"`
 }
 
 func optionalString(raw json.RawMessage) string {
@@ -118,7 +118,14 @@ func convertCatalog(raw []byte) ([]byte, error) {
 			ExperimentalSupportedTools: []string{}, InputModalities: []string{"text"},
 		}
 		m.ModelMessages.InstructionsTemplate = baseInstructions
-		m.DefaultReasoningLevel, m.SupportedReasoningLevels = modelReasoningLevels(id, entry.Capabilities)
+		// Invalid capabilities are optional metadata; do not hide an otherwise valid model.
+		var capabilities upstreamCapabilities
+		if len(entry.Capabilities) > 0 {
+			if err := json.Unmarshal(entry.Capabilities, &capabilities); err != nil {
+				capabilities = upstreamCapabilities{}
+			}
+		}
+		m.DefaultReasoningLevel, m.SupportedReasoningLevels = modelReasoningLevels(id, capabilities)
 		m.TruncationPolicy.Mode, m.TruncationPolicy.Limit = "tokens", 10000
 		contextSize := positiveContext(entry.ContextWindow)
 		if contextSize == 0 {
