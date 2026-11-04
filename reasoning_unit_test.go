@@ -21,8 +21,9 @@ func TestModelSpecificReasoningLevels(t *testing.T) {
 		{"sparse levels", "kmca/k3", upstreamCapabilities{Reasoning: true, EffortTiers: []string{"low", "high", "max"}}, "low", []string{"low", "high", "max"}},
 		{"reasoning false despite tiers", "vag/meta/muse-image-1.0", upstreamCapabilities{Reasoning: false, EffortTiers: []string{"minimal", "low", "medium", "high", "xhigh"}}, "", []string{}},
 		{"reasoning false", "agy/gemini-3-flash", upstreamCapabilities{Reasoning: false}, "", []string{}},
-		{"reasoning true but no tiers", "sprint-local", upstreamCapabilities{Reasoning: true}, "", []string{}},
-		{"reasoning true empty tiers", "opencode-zen/glm-5.3-flash-free", upstreamCapabilities{Reasoning: true, EffortTiers: []string{}}, "", []string{}},
+		{"reasoning true but no tiers", "sprint-local", upstreamCapabilities{Reasoning: true}, "medium", []string{"none", "medium", "high", "xhigh"}},
+		{"reasoning true no tiers high variant", "custom/model-high", upstreamCapabilities{Reasoning: true}, "high", []string{"none", "medium", "high", "xhigh"}},
+		{"reasoning true empty tiers", "opencode-zen/glm-5.3-flash-free", upstreamCapabilities{Reasoning: true, EffortTiers: []string{}}, "medium", []string{"none", "medium", "high", "xhigh"}},
 		{"minimal levels", "custom/reasoning-minimal", upstreamCapabilities{Reasoning: true, EffortTiers: []string{"minimal"}}, "minimal", []string{"minimal"}},
 		{"deduplicate invalid or whitespace levels", "model", upstreamCapabilities{Reasoning: true, EffortTiers: []string{"low", "low", "", " medium ", "high"}}, "medium", []string{"low", "medium", "high"}},
 	}
