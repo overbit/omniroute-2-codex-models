@@ -4,7 +4,7 @@ ARG TARGETOS
 ARG TARGETARCH
 WORKDIR /src
 RUN apk add --no-cache ca-certificates
-COPY go.mod main.go ./
+COPY go.mod main.go reasoning.go ./
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go build -trimpath -ldflags='-s -w -buildid=' -o /out/proxy .
 

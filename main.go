@@ -33,17 +33,17 @@ type modelInfo struct {
 	ModelMessages    struct {
 		InstructionsTemplate string `json:"instructions_template"`
 	} `json:"model_messages"`
-	DefaultReasoningLevel    any      `json:"default_reasoning_level"`
-	SupportedReasoningLevels []string `json:"supported_reasoning_levels"`
-	ShellType                string   `json:"shell_type"`
-	Visibility               string   `json:"visibility"`
-	SupportedInAPI           bool     `json:"supported_in_api"`
-	Priority                 int      `json:"priority"`
-	AvailabilityNux          any      `json:"availability_nux"`
-	Upgrade                  any      `json:"upgrade"`
-	SupportVerbosity         bool     `json:"support_verbosity"`
-	DefaultVerbosity         any      `json:"default_verbosity"`
-	ApplyPatchToolType       any      `json:"apply_patch_tool_type"`
+	DefaultReasoningLevel    *string                 `json:"default_reasoning_level"`
+	SupportedReasoningLevels []reasoningEffortPreset `json:"supported_reasoning_levels"`
+	ShellType                string                  `json:"shell_type"`
+	Visibility               string                  `json:"visibility"`
+	SupportedInAPI           bool                    `json:"supported_in_api"`
+	Priority                 int                     `json:"priority"`
+	AvailabilityNux          any                     `json:"availability_nux"`
+	Upgrade                  any                     `json:"upgrade"`
+	SupportVerbosity         bool                    `json:"support_verbosity"`
+	DefaultVerbosity         any                     `json:"default_verbosity"`
+	ApplyPatchToolType       any                     `json:"apply_patch_tool_type"`
 	TruncationPolicy         struct {
 		Mode  string `json:"mode"`
 		Limit int    `json:"limit"`
@@ -59,6 +59,7 @@ type upstreamEntry struct {
 	DisplayName   json.RawMessage `json:"display_name"`
 	ContextWindow json.RawMessage `json:"context_window"`
 	ContextLength json.RawMessage `json:"context_length"`
+	Capabilities  json.RawMessage `json:"capabilities"`
 }
 
 func optionalString(raw json.RawMessage) string {
@@ -112,11 +113,19 @@ func convertCatalog(raw []byte) ([]byte, error) {
 		}
 		m := modelInfo{
 			Slug: id, DisplayName: name, BaseInstructions: baseInstructions,
-			SupportedReasoningLevels: []string{}, ShellType: "shell_command",
+			SupportedReasoningLevels: []reasoningEffortPreset{}, ShellType: "shell_command",
 			Visibility: "list", SupportedInAPI: true, Priority: len(models) + 1,
 			ExperimentalSupportedTools: []string{}, InputModalities: []string{"text"},
 		}
 		m.ModelMessages.InstructionsTemplate = baseInstructions
+		// Invalid capabilities are optional metadata; do not hide an otherwise valid model.
+		var capabilities upstreamCapabilities
+		if len(entry.Capabilities) > 0 {
+			if err := json.Unmarshal(entry.Capabilities, &capabilities); err != nil {
+				capabilities = upstreamCapabilities{}
+			}
+		}
+		m.DefaultReasoningLevel, m.SupportedReasoningLevels = modelReasoningLevels(id, capabilities)
 		m.TruncationPolicy.Mode, m.TruncationPolicy.Limit = "tokens", 10000
 		contextSize := positiveContext(entry.ContextWindow)
 		if contextSize == 0 {

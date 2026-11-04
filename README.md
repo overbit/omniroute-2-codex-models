@@ -131,11 +131,22 @@ On a local Linux test with 40 model entries, an in-memory upstream, ApacheBench 
 
 Numbers are for this mock environment, not real OmniRoute latency or production performance. Caching permits catalog data to be up to 30 seconds old; set `CACHE_TTL_SECONDS=0` for immediate freshness. The adapter is only called for model discovery, not for token streaming or inference.
 
+## Reasoning effort mapping
+
+Codex expects `supported_reasoning_levels` as objects with `effort` and `description`, and `default_reasoning_level` as an advertised effort string. The adapter reads each OmniRoute model's `capabilities.reasoning` and `capabilities.effort_tiers`:
+
+- If reasoning is enabled **and** effort tiers are present, it exposes precisely those tiers (for example `low`, `medium`, `high`, `xhigh`, `max`, `ultra`). Aliases ending in an advertised tier (such as `-low` or `-max`) default to that tier; otherwise `medium`, then `low`, then the first advertised tier is preferred.
+- If `capabilities.reasoning` is `false`, it advertises no reasoning controls—even when the upstream model lists effort tiers (some image models do).
+- If `capabilities.reasoning` is `true` but `effort_tiers` is missing or empty, the adapter exposes **`none`, `medium`, `high`, `xhigh`** (in that order) and defaults to `medium`, unless the model alias ends in one of those effort names (e.g. `-high`). This is a compatibility fallback; OmniRoute may still reject an unsupported effort.
+
+This only affects Codex model metadata, not the OmniRoute model ID or inference routing. Upstream can still reject an effort or other parameter despite advertised metadata. An explicitly set `model_reasoning_effort` in Codex `config.toml` can override the catalog default; remove or adjust that setting if you see an unsupported-effort error.
+
 ## Troubleshooting
 
 - **401:** Check upstream authentication and key precedence.
 - **502:** Check the upstream hostname/port, JSON format, and logs; the model listing must fit within the 1 MiB limit.
 - **No additional models available:** Verify that `curl -fsS http://127.0.0.1:8787/models` returns a nonempty `models` array, then restart Codex.
+- **Reasoning effort rejected:** Check `/models` for a model's `default_reasoning_level` and `supported_reasoning_levels`; compare with OmniRoute's `capabilities.effort_tiers` and any `model_reasoning_effort` override in Codex.
 - **Docker networking:** Ensure both containers share a user-defined network; use the container's internal port, not its host-mapped port.
 - **Model list looks stale:** Wait for TTL or set `CACHE_TTL_SECONDS=0`.
 
