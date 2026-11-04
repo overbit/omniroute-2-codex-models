@@ -25,15 +25,20 @@ var reasoningDescriptions = map[string]string{
 	"persistent": "Persistent reasoning",
 }
 
-// Map only explicitly advertised reasoning tiers. Some upstream entries expose
-// effort_tiers for non-reasoning models, and others provide no tier details.
+// Use advertised reasoning tiers when present. When reasoning is enabled but
+// tiers are missing or empty, provide a conventional fallback. Non-reasoning
+// models never expose effort options, even if upstream lists them.
 func modelReasoningLevels(slug string, cap upstreamCapabilities) (*string, []reasoningEffortPreset) {
-	levels := make([]reasoningEffortPreset, 0, len(cap.EffortTiers))
 	if !cap.Reasoning {
-		return nil, levels
+		return nil, []reasoningEffortPreset{}
 	}
-	seen := make(map[string]bool, len(cap.EffortTiers))
-	for _, raw := range cap.EffortTiers {
+	tiers := cap.EffortTiers
+	if len(tiers) == 0 {
+		tiers = []string{"none", "medium", "high", "xhigh"}
+	}
+	levels := make([]reasoningEffortPreset, 0, len(tiers))
+	seen := make(map[string]bool, len(tiers))
+	for _, raw := range tiers {
 		effort := strings.TrimSpace(raw)
 		if effort == "" || len(effort) > 64 || strings.ContainsAny(effort, "\r\n\t") || seen[effort] {
 			continue
