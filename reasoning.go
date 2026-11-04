@@ -26,19 +26,15 @@ var reasoningDescriptions = map[string]string{
 }
 
 // Use advertised reasoning tiers when present. When reasoning is enabled but
-// tiers are missing or empty, provide a conventional fallback. Non-reasoning
-// models never expose effort options, even if upstream lists them.
+// tiers are missing or contain no valid values, provide a conventional fallback.
+// Non-reasoning models never expose effort options, even if upstream lists them.
 func modelReasoningLevels(slug string, cap upstreamCapabilities) (*string, []reasoningEffortPreset) {
 	if !cap.Reasoning {
 		return nil, []reasoningEffortPreset{}
 	}
-	tiers := cap.EffortTiers
-	if len(tiers) == 0 {
-		tiers = []string{"none", "medium", "high", "xhigh"}
-	}
-	levels := make([]reasoningEffortPreset, 0, len(tiers))
-	seen := make(map[string]bool, len(tiers))
-	for _, raw := range tiers {
+	levels := make([]reasoningEffortPreset, 0, len(cap.EffortTiers))
+	seen := make(map[string]bool, len(cap.EffortTiers))
+	for _, raw := range cap.EffortTiers {
 		effort := strings.TrimSpace(raw)
 		if effort == "" || len(effort) > 64 || strings.ContainsAny(effort, "\r\n\t") || seen[effort] {
 			continue
@@ -52,15 +48,17 @@ func modelReasoningLevels(slug string, cap upstreamCapabilities) (*string, []rea
 		levels = append(levels, reasoningEffortPreset{Effort: effort, Description: label})
 	}
 	if len(levels) == 0 {
-		return nil, levels
+		for _, effort := range []string{"none", "medium", "high", "xhigh"} {
+			levels = append(levels, reasoningEffortPreset{Effort: effort, Description: reasoningDescriptions[effort]})
+			seen[effort] = true
+		}
 	}
 	// Many OmniRoute model IDs are effort-fixed aliases (-low, -high, etc.).
 	// Choose that variant's tier when it is advertised; otherwise prefer medium.
 	selected := ""
 	for _, option := range levels {
-		if strings.HasSuffix(slug, "-"+option.Effort) {
+		if strings.HasSuffix(slug, "-"+option.Effort) && len(option.Effort) > len(selected) {
 			selected = option.Effort
-			break
 		}
 	}
 	if selected == "" {
